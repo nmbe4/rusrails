@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Dependencies
+node_modules
+vendor/bundle
+
+# Logs
+log/*
+*.log
+npm-debug.log*
+
+# Runtime
+tmp/*
+!tmp/.keep
+.pid
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage/
+.nyc_output
+
+# Build artifacts
+app/assets/builds/*
+public/assets
+public/packs*
+
+# Cache
+.sass-cache/
+.cache

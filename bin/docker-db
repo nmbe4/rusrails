@@ -1,0 +1,229 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# PostgreSQL Docker management script for RusRails
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+show_help() {
+    cat << EOF
+🐳 RusRails PostgreSQL Docker Manager
+
+Usage: $0 [command]
+
+Commands:
+  start         Start PostgreSQL container
+  stop          Stop PostgreSQL container
+  restart       Restart PostgreSQL container
+  status        Show container status
+  logs          Show PostgreSQL logs
+  shell         Connect to PostgreSQL shell (psql)
+  reset         Reset database (DANGER: deletes all data)
+  backup        Create database backup
+  restore FILE  Restore database from backup file
+  setup         First-time setup (start + create + migrate + seed)
+  
+  # With pgAdmin
+  start-all     Start PostgreSQL + pgAdmin
+  pgadmin       Open pgAdmin in browser
+
+Examples:
+  $0 setup              # First-time setup
+  $0 start              # Start PostgreSQL only
+  $0 start-all          # Start PostgreSQL + pgAdmin
+  $0 shell              # Connect to database
+  $0 backup             # Create backup
+  $0 restore backup.sql # Restore from backup
+EOF
+}
+
+ensure_docker() {
+    if ! command -v docker &> /dev/null; then
+        echo "❌ Docker is not installed. Please install Docker first."
+        exit 1
+    fi
+    
+    if ! command -v docker-compose &> /dev/null; then
+        echo "❌ docker-compose is not installed. Please install docker-compose first."
+        exit 1
+    fi
+}
+
+start_postgres() {
+    echo "🚀 Starting PostgreSQL container..."
+    cd "$PROJECT_DIR"
+    docker-compose up -d postgres
+    
+    echo "⏳ Waiting for PostgreSQL to be ready..."
+    timeout 60 bash -c 'until docker-compose exec postgres pg_isready -U postgres -d rusrails_development; do sleep 2; done'
+    
+    echo "✅ PostgreSQL is ready!"
+    echo "🔗 Connection: postgresql://postgres:mysecretpassword@localhost:5434/rusrails_development"
+}
+
+start_all() {
+    echo "🚀 Starting PostgreSQL + pgAdmin..."
+    cd "$PROJECT_DIR"
+    docker-compose --profile pgadmin up -d
+    
+    echo "⏳ Waiting for services to be ready..."
+    timeout 60 bash -c 'until docker-compose exec postgres pg_isready -U postgres -d rusrails_development; do sleep 2; done'
+    
+    echo "✅ Services are ready!"
+    echo "🔗 PostgreSQL: postgresql://postgres:mysecretpassword@localhost:5434/rusrails_development"
+    echo "🌐 pgAdmin: http://localhost:5050 (admin@rusrails.local / admin123)"
+}
+
+stop_services() {
+    echo "🛑 Stopping Docker services..."
+    cd "$PROJECT_DIR"
+    docker-compose down
+    echo "✅ Services stopped"
+}
+
+restart_services() {
+    stop_services
+    start_postgres
+}
+
+show_status() {
+    cd "$PROJECT_DIR"
+    echo "📊 Docker Services Status:"
+    docker-compose ps
+}
+
+show_logs() {
+    cd "$PROJECT_DIR"
+    echo "📋 PostgreSQL Logs (press Ctrl+C to exit):"
+    docker-compose logs -f postgres
+}
+
+connect_shell() {
+    cd "$PROJECT_DIR"
+    echo "🔌 Connecting to PostgreSQL shell..."
+    echo "💡 Use \\l to list databases, \\c rusrails_development to connect to main DB"
+    docker-compose exec postgres psql -U postgres -d rusrails_development
+}
+
+reset_database() {
+    echo "⚠️  WARNING: This will delete ALL data in the database!"
+    read -p "Are you sure? Type 'yes' to continue: " -r
+    if [[ $REPLY == "yes" ]]; then
+        cd "$PROJECT_DIR"
+        echo "🗑️  Dropping and recreating database..."
+        docker-compose exec postgres psql -U postgres -c "DROP DATABASE IF EXISTS rusrails_development;"
+        docker-compose exec postgres psql -U postgres -c "DROP DATABASE IF EXISTS rusrails_test;"
+        docker-compose exec postgres psql -U postgres -c "CREATE DATABASE rusrails_development;"
+        docker-compose exec postgres psql -U postgres -c "CREATE DATABASE rusrails_test;"
+        
+        echo "🔄 Running Rails setup..."
+        rails db:create db:migrate db:seed
+        echo "✅ Database reset complete"
+    else
+        echo "❌ Operation cancelled"
+    fi
+}
+
+backup_database() {
+    cd "$PROJECT_DIR"
+    BACKUP_FILE="backup_$(date +%Y%m%d_%H%M%S).sql"
+    echo "💾 Creating backup: $BACKUP_FILE"
+    docker-compose exec postgres pg_dump -U postgres rusrails_development > "$BACKUP_FILE"
+    echo "✅ Backup created: $BACKUP_FILE"
+}
+
+restore_database() {
+    local backup_file="$1"
+    if [[ ! -f "$backup_file" ]]; then
+        echo "❌ Backup file not found: $backup_file"
+        exit 1
+    fi
+    
+    cd "$PROJECT_DIR"
+    echo "📥 Restoring from: $backup_file"
+    docker-compose exec -T postgres psql -U postgres rusrails_development < "$backup_file"
+    echo "✅ Database restored"
+}
+
+setup_first_time() {
+    echo "🎯 Setting up RusRails database for the first time..."
+    
+    start_postgres
+    
+    echo "📋 Creating and migrating database..."
+    rails db:create db:migrate
+    
+    echo "🌱 Loading seed data..."
+    rails static_docs:import
+    
+    echo "✅ Setup complete! Your RusRails database is ready."
+    echo "🔗 Connect at: postgresql://postgres:mysecretpassword@localhost:5434/rusrails_development"
+}
+
+open_pgadmin() {
+    if command -v open &> /dev/null; then
+        open http://localhost:5050
+    elif command -v xdg-open &> /dev/null; then
+        xdg-open http://localhost:5050
+    else
+        echo "🌐 Open http://localhost:5050 in your browser"
+        echo "📧 Email: admin@rusrails.local"
+        echo "🔑 Password: admin123"
+    fi
+}
+
+# Main script logic
+ensure_docker
+
+case "${1:-help}" in
+    start)
+        start_postgres
+        ;;
+    start-all)
+        start_all
+        ;;
+    stop)
+        stop_services
+        ;;
+    restart)
+        restart_services
+        ;;
+    status)
+        show_status
+        ;;
+    logs)
+        show_logs
+        ;;
+    shell)
+        connect_shell
+        ;;
+    reset)
+        reset_database
+        ;;
+    backup)
+        backup_database
+        ;;
+    restore)
+        if [[ -z "${2:-}" ]]; then
+            echo "❌ Please specify backup file: $0 restore backup.sql"
+            exit 1
+        fi
+        restore_database "$2"
+        ;;
+    setup)
+        setup_first_time
+        ;;
+    pgadmin)
+        open_pgadmin
+        ;;
+    help|--help|-h)
+        show_help
+        ;;
+    *)
+        echo "❌ Unknown command: $1"
+        echo ""
+        show_help
+        exit 1
+        ;;
+esac
