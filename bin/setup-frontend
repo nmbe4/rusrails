@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "🚀 Setting up modern frontend for RusRails..."
+
+# Install Node.js dependencies (minimal now - just build tools)
+echo "📦 Installing Node.js dependencies..."
+npm install
+
+# Create builds directory
+echo "📁 Creating builds directory..."
+mkdir -p app/assets/builds
+
+# Build CSS and JS
+echo "🎨 Building CSS (no more Sass deprecation warnings!)..."
+npm run build:css
+
+echo "⚡ Building JavaScript..."
+npm run build:js
+
+# Bundle install for new gems
+echo "💎 Installing Ruby gems..."
+bundle install
+
+echo "✅ Frontend setup complete!"
+echo ""
+echo "🎯 Key Improvements:"
+echo "✓ No more Sass @import deprecation warnings"
+echo "✓ Bootstrap 5 loaded via CDN for better performance"
+echo "✓ Modern CSS-first approach with CSS custom properties"
+echo "✓ Full dark mode support"
+echo "✓ Responsive design for all devices"
+echo "✓ Copy-to-clipboard for code blocks"
+echo ""
+echo "🛠️ Development:"
+echo "1. Run 'npm run build' to rebuild assets after changes"
+echo "2. Start the Rails server: 'rails server'"
+echo "3. Visit your site and enjoy the modern UI!"
+echo ""
+echo "💡 Features:"
+echo "- Toggle dark mode with the moon/sun icon in the navbar"
+echo "- Responsive navigation with mobile hamburger menu"
+echo "- Modern Bootstrap 5 components"
+echo "- Improved accessibility and performance"

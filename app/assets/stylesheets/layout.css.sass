@@ -1,72 +1,59 @@
-.navbar
-  .brand
-    height: 77px
-    width: 380px
-    padding: 0
-    position: absolute
-    border-radius: 0 0 25px 0
-    border-bottom: 1px solid #eee
-    box-shadow: 0px 1px 10px rgba(0, 0, 0, 0.102)
+/* Updated modern layout styles that work with new Bootstrap 5 structure */
 
-    background-image: image-url('rusrails.png'), -moz-linear-gradient(top, #eee, #f7f7f7)
-    background-image: image-url('rusrails.png'), -webkit-gradient(linear, 0 0, 0 100%, from(#eee), to(#f7f7f7))
-    background-image: image-url('rusrails.png'), -webkit-linear-gradient(top, #eee, #f7f7f7)
-    background-image: image-url('rusrails.png'), -o-linear-gradient(top, #eee, #f7f7f7)
-    background-image: image-url('rusrails.png'), linear-gradient(to bottom, #eee, #f7f7f7)
+// Content navigation dropdown improvements
+.dropdown-menu {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
 
-  .nav.top-menu
-    margin-right: 20px
+  ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
 
-.popover.index-content
-  width: 680px
-  max-width: 680px
-  padding-bottom: 15px
-  height: 500px
-  overflow-y: auto
-  overflow-x: hidden
+    li {
+      margin-bottom: 0.5rem;
 
-  .popover-content
-    display: flex
+      a {
+        color: var(--text-primary);
+        text-decoration: none;
+        padding: 0.25rem 0;
+        display: block;
 
-    & > p
-      display: none
+        &:hover {
+          color: var(--bs-primary);
+        }
+      }
+    }
+  }
 
-    & > ul
-      float: left
-      width: 350px
-      list-style: none outside none
-      margin-left: 0px
+  // Multi-column layout for large menus
+  @media (min-width: 768px) {
+    .row {
+      min-width: 600px;
+    }
+  }
+}
 
-      & > li
-        margin-top: 15px
+// Enhanced navbar brand
+.navbar-brand {
+  img {
+    max-height: 40px;
+    width: auto;
+  }
+}
 
-    & > ul:first-child
-      width: 300px
+// Responsive improvements for mobile
+@media (max-width: 767px) {
+  .navbar-brand img {
+    max-height: 30px;
+  }
 
-.to_top
-  display: none
-  .to_top_panel
-    display: none
+  .dropdown-menu {
+    max-width: 90vw;
 
-@media (min-width: 990px)
-  .to_top
-    position: fixed
-    top: 0
-    bottom: 0
-    left: 0
-    width: 30px
-    display: none
-    .to_top_panel
-      display: block
-      width: 100%
-      height: 100%
-      color: #eeeeee
-      position: relative
-    &:hover
-      -moz-opacity: 0.9
-      filter: alpha(opacity = 90)
-      opacity: 0.9
-      .to_top_panel
-        cursor: pointer
-        background: #eeeeee
-        box-shadow: 0px 10px rgba(0, 0, 0, 0.102)
+    .row {
+      min-width: auto;
+    }
+  }
+}

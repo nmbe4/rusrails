@@ -8,7 +8,9 @@
     "lib": "lib"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:css": "sass app/assets/stylesheets/application.scss:app/assets/builds/application.css --no-source-map",
+    "build:js": "esbuild app/assets/javascripts/application.js --bundle --sourcemap --outdir=app/assets/builds --public-path=/assets",
+    "build": "npm run build:css && npm run build:js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +24,9 @@
   "homepage": "https://github.com/rusrails/rusrails#readme",
   "devDependencies": {
     "cspell": "latest",
-    "@cspell/dict-ru_ru": "latest"
-  }
+    "@cspell/dict-ru_ru": "latest",
+    "sass": "^1.69.0",
+    "esbuild": "^0.19.0"
+  },
+  "dependencies": {}
 }

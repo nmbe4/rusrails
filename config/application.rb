@@ -20,5 +20,10 @@ module Rusrails
     # config.eager_load_paths << Rails.root.join("extras")
 
     config.i18n.default_locale = :ru
+
+    # Configure asset bundling with modern approach
+    # We handle compression in the build process (npm), not Rails
+    config.assets.css_compressor = nil
+    config.assets.js_compressor = nil
   end
 end
