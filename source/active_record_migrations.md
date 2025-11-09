@@ -188,7 +188,7 @@ end
 Например,
 
 ```bash
-$ bin/rails generate migration CreateProducts name:string part_number:string
+$ bin/rails generate migration AddUserRefToProducts user:references
 ```
 
 генерирует следующий вызов [`add_reference`][]:
